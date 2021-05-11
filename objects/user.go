@@ -16,6 +16,12 @@ type (
 		Rating   int    `json:"rating" bson:"rating, omitempty"`
 	}
 
+	UpdateUser struct {
+		Username string `json:"username" bson:"username"`
+		Name     string `json:"name" bson:"name, omitempty"`
+		Rating   int    `json:"rating" bson:"rating, omitempty"`
+	}
+
 	AuthorizeRequest struct {
 		Username string `json:"username"`
 		Password string `json:"password"`

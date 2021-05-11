@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"github.com/atulanand206/go-mongo"
 	"github.com/atulanand206/users/objects"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	mg "go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -32,20 +34,23 @@ func Routes() *http.ServeMux {
 	router.HandleFunc("/user", http.HandlerFunc(newUserHandler))
 	router.HandleFunc("/users", http.HandlerFunc(getUsersHandler))
 	router.HandleFunc("/users/username/", http.HandlerFunc(getUserByUsernameHandler))
+	router.HandleFunc("/user/username/", http.HandlerFunc(updateUserHandler))
 	router.HandleFunc("/authorize", http.HandlerFunc(authorizeHandler))
 	return router
 }
 
 func newUserHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set(cors, "*")
+	w.Header().Set(contentTypeKey, contentTypeApplicationJson)
 	decoder := json.NewDecoder(r.Body)
-	var ob objects.UserRequest
-	err := decoder.Decode(&ob)
+	var userRequest objects.UserRequest
+	err := decoder.Decode(&userRequest)
 	if err != nil {
 		http.Error(w, "Can't decode the request", http.StatusBadRequest)
 		return
 	}
-	ob.EncryptedPassword = hash(ob.Password)
-	document, err := document(&ob)
+	userRequest.EncryptedPassword = hash(userRequest.Password)
+	document, err := document(&userRequest)
 	if err != nil {
 		http.Error(w, "Can't create DB request", http.StatusInternalServerError)
 		return
@@ -55,8 +60,6 @@ func newUserHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set(cors, "*")
-	w.Header().Set(contentTypeKey, contentTypeApplicationJson)
 	json.NewEncoder(w).Encode(response)
 }
 
@@ -70,6 +73,8 @@ func document(v interface{}) (doc *bson.D, err error) {
 }
 
 func getUsersHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set(cors, "*")
+	w.Header().Set(contentTypeKey, contentTypeApplicationJson)
 	var response []objects.User
 	cursor, err := mongo.Find(database, collection, bson.M{})
 	if err != nil {
@@ -84,12 +89,12 @@ func getUsersHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		response = append(response, user)
 	}
-	w.Header().Set(cors, "*")
-	w.Header().Set(contentTypeKey, contentTypeApplicationJson)
 	json.NewEncoder(w).Encode(response)
 }
 
 func getUserByUsernameHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set(cors, "*")
+	w.Header().Set(contentTypeKey, contentTypeApplicationJson)
 	username := strings.TrimPrefix(r.URL.Path, "/users/username/")
 	response := mongo.FindOne(database, collection, bson.M{"username": username})
 	err := response.Err()
@@ -102,8 +107,6 @@ func getUserByUsernameHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Can't decode the response", http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set(cors, "*")
-	w.Header().Set(contentTypeKey, contentTypeApplicationJson)
 	json.NewEncoder(w).Encode(user)
 }
 
@@ -116,7 +119,36 @@ func decodeUser(document *mg.SingleResult) (v objects.User, err error) {
 	return user, err
 }
 
+func updateUserHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set(cors, "*")
+	w.Header().Set(contentTypeKey, contentTypeApplicationJson)
+	userId := strings.TrimPrefix(r.URL.Path, "/user/username/")
+	decoder := json.NewDecoder(r.Body)
+	var user objects.UpdateUser
+	err := decoder.Decode(&user)
+	if err != nil {
+		http.Error(w, "Can't decode the request", http.StatusBadRequest)
+		return
+	}
+	document, err := document(&user)
+	if err != nil {
+		http.Error(w, "Can't create DB request", http.StatusInternalServerError)
+		return
+	}
+	fmt.Println(*document)
+	response, err := mongo.Update(database, collection,
+		bson.M{"_id": userId}, bson.D{primitive.E{Key: "$set", Value: *document}})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	fmt.Println(response)
+	json.NewEncoder(w).Encode(response)
+}
+
 func authorizeHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set(cors, "*")
+	w.Header().Set(contentTypeKey, contentTypeApplicationJson)
 	decoder := json.NewDecoder(r.Body)
 	var ob objects.AuthorizeRequest
 	err := decoder.Decode(&ob)
@@ -131,8 +163,6 @@ func authorizeHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid login", http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set(cors, "*")
-	w.Header().Set(contentTypeKey, contentTypeApplicationJson)
 }
 
 func hash(s string) [32]byte {
