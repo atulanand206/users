@@ -75,8 +75,14 @@ func document(v interface{}) (doc *bson.D, err error) {
 func getUsersHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(cors, "*")
 	w.Header().Set(contentTypeKey, contentTypeApplicationJson)
+	decoder := json.NewDecoder(r.Body)
+	var usernames []string
+	err := decoder.Decode(&usernames)
+	if err != nil {
+		http.Error(w, "Can't decode the request", http.StatusInternalServerError)
+	}
 	var response []objects.User
-	cursor, err := mongo.Find(database, collection, bson.M{})
+	cursor, err := mongo.Find(database, collection, bson.M{"username": bson.M{"$in": usernames}})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
