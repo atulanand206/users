@@ -7,10 +7,17 @@ github.com/atulanand206/go-mongo v0.0.2 h1:My0KE3sW9XQ1t7gTu8jza+/XnUhfG2jOe/U17
 github.com/atulanand206/go-mongo v0.0.2/go.mod h1:K49Bi+77bBhceP035yLuQTzFEjtkrozY6tFHnSCmOak=
 github.com/atulanand206/go-mongo v0.0.3 h1:NyvJ+4Nfd+0cHPqwgB0QK+ZSmi5Rx4ovQrURKifglaQ=
 github.com/atulanand206/go-mongo v0.0.3/go.mod h1:K49Bi+77bBhceP035yLuQTzFEjtkrozY6tFHnSCmOak=
+github.com/atulanand206/go-network v0.0.1 h1:mdqDn52JBnEV+fwVti5ilJ17NJ/suVqCqynPiL/fODw=
+github.com/atulanand206/go-network v0.0.1/go.mod h1:3APhuP4lZa7fB3oaBp1c/IsR2bZ4u1GoWPtOGRPTC6E=
+github.com/atulanand206/go-network v0.0.2 h1:PdUNdyN961Fo5FG0R8h28mPEaxqFybPKuwYd2qjugec=
+github.com/atulanand206/go-network v0.0.2/go.mod h1:3APhuP4lZa7fB3oaBp1c/IsR2bZ4u1GoWPtOGRPTC6E=
 github.com/aws/aws-sdk-go v1.34.28 h1:sscPpn/Ns3i0F4HPEWAVcwdIRaZZCuL7llJ2/60yPIk=
 github.com/aws/aws-sdk-go v1.34.28/go.mod h1:H7NKnBqNVzoTJpGfLrQkkD+ytBA93eiDYi/+8rV9s48=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
+github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1 h1:CaO/zOnF8VvUfEbhRatPcwKVWamvbYd8tQGRWacE9kU=
+github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1/go.mod h1:+hnT3ywWDTAFrW5aE+u2Sa/wT555ZqwoCS+pk3p6ry4=
 github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21/go.mod h1:+020luEh2TKB4/GOp8oxxtq0Daoen/Cii55CzbTV6DU=
 github.com/frankban/quicktest v1.11.3/go.mod h1:wRf/ReqHper53s+kmmSZizM8NamnL3IM0I9ntUbOk+k=
 github.com/go-sql-driver/mysql v1.5.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LBy8hT2VhHyBg=

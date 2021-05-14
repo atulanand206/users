@@ -11,17 +11,12 @@ import (
 	"strings"
 
 	"github.com/atulanand206/go-mongo"
+	net "github.com/atulanand206/go-network"
 	"github.com/atulanand206/users/objects"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	mg "go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-)
-
-const (
-	contentTypeKey             = "content-type"
-	cors                       = "Access-Control-Allow-Origin"
-	contentTypeApplicationJson = "application/json"
 )
 
 var database string
@@ -31,18 +26,27 @@ func Routes() *http.ServeMux {
 	database = os.Getenv("DATABASE")
 	collection = os.Getenv("MONGO_COLLECTION")
 
+	authChain := net.MiddlewareChain{
+		net.CorsAllInterceptor(),
+		net.ApplicationJsonInterceptor(),
+		net.AuthenticationInterceptor(),
+	}
+
+	chain := net.MiddlewareChain{
+		net.CorsAllInterceptor(),
+		net.ApplicationJsonInterceptor(),
+	}
+
 	router := http.NewServeMux()
-	router.HandleFunc("/user", http.HandlerFunc(newUserHandler))
-	router.HandleFunc("/users", http.HandlerFunc(getUsersHandler))
-	router.HandleFunc("/users/username/", http.HandlerFunc(getUserByUsernameHandler))
-	router.HandleFunc("/user/username/", http.HandlerFunc(updateUserHandler))
-	router.HandleFunc("/authorize", http.HandlerFunc(authorizeHandler))
+	router.HandleFunc("/user", chain.Handler(newUserHandler))
+	router.HandleFunc("/users", authChain.Handler(getUsersHandler))
+	router.HandleFunc("/users/username/", authChain.Handler(getUserByUsernameHandler))
+	router.HandleFunc("/user/username/", authChain.Handler(updateUserHandler))
+	router.HandleFunc("/authorize", chain.Handler(authorizeHandler))
 	return router
 }
 
 func newUserHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set(cors, "*")
-	w.Header().Set(contentTypeKey, contentTypeApplicationJson)
 	decoder := json.NewDecoder(r.Body)
 	var userRequest objects.UserRequest
 	err := decoder.Decode(&userRequest)
@@ -74,13 +78,12 @@ func document(v interface{}) (doc *bson.D, err error) {
 }
 
 func getUsersHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set(cors, "*")
-	w.Header().Set(contentTypeKey, contentTypeApplicationJson)
 	decoder := json.NewDecoder(r.Body)
 	var usernames []string
 	err := decoder.Decode(&usernames)
 	if err != nil {
 		http.Error(w, "Can't decode the request", http.StatusInternalServerError)
+		return
 	}
 	var response []objects.User
 	opts := options.Find()
@@ -103,8 +106,6 @@ func getUsersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getUserByUsernameHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set(cors, "*")
-	w.Header().Set(contentTypeKey, contentTypeApplicationJson)
 	username := strings.TrimPrefix(r.URL.Path, "/users/username/")
 	response := mongo.FindOne(database, collection, bson.M{"username": username})
 	err := response.Err()
@@ -130,8 +131,6 @@ func decodeUser(document *mg.SingleResult) (v objects.User, err error) {
 }
 
 func updateUserHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set(cors, "*")
-	w.Header().Set(contentTypeKey, contentTypeApplicationJson)
 	userId := strings.TrimPrefix(r.URL.Path, "/user/username/")
 	uId, _ := primitive.ObjectIDFromHex(userId)
 	fmt.Println(userId)
@@ -159,8 +158,6 @@ func updateUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func authorizeHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set(cors, "*")
-	w.Header().Set(contentTypeKey, contentTypeApplicationJson)
 	decoder := json.NewDecoder(r.Body)
 	var ob objects.AuthorizeRequest
 	err := decoder.Decode(&ob)
@@ -175,6 +172,12 @@ func authorizeHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid login", http.StatusInternalServerError)
 		return
 	}
+	token, err := net.CreateToken(ob.Username)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	json.NewEncoder(w).Encode(token)
 }
 
 func hash(s string) [32]byte {
