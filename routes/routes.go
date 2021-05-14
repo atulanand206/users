@@ -15,6 +15,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	mg "go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 const (
@@ -82,7 +83,10 @@ func getUsersHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Can't decode the request", http.StatusInternalServerError)
 	}
 	var response []objects.User
-	cursor, err := mongo.Find(database, collection, bson.M{"username": bson.M{"$in": usernames}})
+	opts := options.Find()
+	opts.SetSort(bson.D{primitive.E{Key: "rating", Value: -1}})
+	cursor, err := mongo.Find(database, collection,
+		bson.M{"username": bson.M{"$in": usernames}}, opts)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -129,6 +133,8 @@ func updateUserHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set(cors, "*")
 	w.Header().Set(contentTypeKey, contentTypeApplicationJson)
 	userId := strings.TrimPrefix(r.URL.Path, "/user/username/")
+	uId, _ := primitive.ObjectIDFromHex(userId)
+	fmt.Println(userId)
 	decoder := json.NewDecoder(r.Body)
 	var user objects.UpdateUser
 	err := decoder.Decode(&user)
@@ -143,7 +149,7 @@ func updateUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println(*document)
 	response, err := mongo.Update(database, collection,
-		bson.M{"_id": userId}, bson.D{primitive.E{Key: "$set", Value: *document}})
+		bson.M{"_id": uId}, bson.D{primitive.E{Key: "$set", Value: *document}})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

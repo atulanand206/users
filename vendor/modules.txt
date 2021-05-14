@@ -1,4 +1,4 @@
-# github.com/atulanand206/go-mongo v0.0.2
+# github.com/atulanand206/go-mongo v0.0.3
 ## explicit
 github.com/atulanand206/go-mongo
 # github.com/aws/aws-sdk-go v1.34.28

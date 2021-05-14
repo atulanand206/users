@@ -5,6 +5,8 @@ github.com/atulanand206/go-mongo v0.0.1 h1:ujd0xb0YMQ5nI9nKKmVw3JN+E1/bU8YiQZkvC
 github.com/atulanand206/go-mongo v0.0.1/go.mod h1:K49Bi+77bBhceP035yLuQTzFEjtkrozY6tFHnSCmOak=
 github.com/atulanand206/go-mongo v0.0.2 h1:My0KE3sW9XQ1t7gTu8jza+/XnUhfG2jOe/U17MYYdIo=
 github.com/atulanand206/go-mongo v0.0.2/go.mod h1:K49Bi+77bBhceP035yLuQTzFEjtkrozY6tFHnSCmOak=
+github.com/atulanand206/go-mongo v0.0.3 h1:NyvJ+4Nfd+0cHPqwgB0QK+ZSmi5Rx4ovQrURKifglaQ=
+github.com/atulanand206/go-mongo v0.0.3/go.mod h1:K49Bi+77bBhceP035yLuQTzFEjtkrozY6tFHnSCmOak=
 github.com/aws/aws-sdk-go v1.34.28 h1:sscPpn/Ns3i0F4HPEWAVcwdIRaZZCuL7llJ2/60yPIk=
 github.com/aws/aws-sdk-go v1.34.28/go.mod h1:H7NKnBqNVzoTJpGfLrQkkD+ytBA93eiDYi/+8rV9s48=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
