@@ -1,7 +1,7 @@
-# github.com/atulanand206/go-mongo v0.0.3
+# github.com/atulanand206/go-mongo v0.0.5
 ## explicit
 github.com/atulanand206/go-mongo
-# github.com/atulanand206/go-network v0.0.2
+# github.com/atulanand206/go-network v0.1.1
 ## explicit
 github.com/atulanand206/go-network
 # github.com/aws/aws-sdk-go v1.34.28
@@ -23,6 +23,7 @@ github.com/aws/aws-sdk-go/internal/sync/singleflight
 github.com/aws/aws-sdk-go/private/protocol
 github.com/aws/aws-sdk-go/private/protocol/rest
 # github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1
+## explicit
 github.com/dgrijalva/jwt-go/v4
 # github.com/go-stack/stack v1.8.0
 github.com/go-stack/stack

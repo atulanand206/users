@@ -12,9 +12,11 @@ import (
 func main() {
 	godotenv.Load()
 
+	// Register the MongoDB cloud atlas database.
 	mongoClientId := os.Getenv("MONGO_CLIENT_ID")
 	mongo.ConfigureMongoClient(mongoClientId)
 
+	// Register the endpoints exposed from the service.
 	routes := routes.Routes()
 	handler := http.HandlerFunc(routes.ServeHTTP)
 	port := os.Getenv("PORT")
