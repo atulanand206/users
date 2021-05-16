@@ -10,13 +10,13 @@ import (
 	"os"
 	"strings"
 
-	"github.com/atulanand206/go-mongo"
+	mg "github.com/atulanand206/go-mongo"
 	net "github.com/atulanand206/go-network"
 	"github.com/atulanand206/users/objects"
 	"github.com/dgrijalva/jwt-go/v4"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	mg "go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -82,13 +82,13 @@ func HandlerNewUser(w http.ResponseWriter, r *http.Request) {
 	// Add the encrypted password to be used for verifying credentials.
 	userRequest.EncryptedPassword = Hash(userRequest.Password)
 	// Create the bson document for the mongo write request.
-	document, err := mongo.Document(&userRequest)
+	document, err := mg.Document(&userRequest)
 	if err != nil {
 		http.Error(w, "Can't create DB request", http.StatusInternalServerError)
 		return
 	}
 	// Write the new user to the mongo database.
-	response, err := mongo.Write(Database, Collection, *document)
+	response, err := mg.Write(Database, Collection, *document)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -112,7 +112,7 @@ func HandlerGetUsers(w http.ResponseWriter, r *http.Request) {
 	opts := options.Find()
 	opts.SetSort(bson.D{primitive.E{Key: "rating", Value: -1}})
 	// Find the users matching the given criteria.
-	cursor, err := mongo.Find(Database, Collection,
+	cursor, err := mg.Find(Database, Collection,
 		bson.M{"username": bson.M{"$in": usernames}}, opts)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -136,7 +136,7 @@ func HandlerGetUserByUsername(w http.ResponseWriter, r *http.Request) {
 	// Get the username from the url path variable.
 	username := strings.TrimPrefix(r.URL.Path, "/users/username/")
 	// Find the user from the database.
-	response := mongo.FindOne(Database, Collection, bson.M{"username": username})
+	response := mg.FindOne(Database, Collection, bson.M{"username": username})
 	err := response.Err()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -153,7 +153,7 @@ func HandlerGetUserByUsername(w http.ResponseWriter, r *http.Request) {
 }
 
 // Decodes a mongo db single result into an user object.
-func DecodeUser(document *mg.SingleResult) (v objects.User, err error) {
+func DecodeUser(document *mongo.SingleResult) (v objects.User, err error) {
 	var user objects.User
 	if err = document.Decode(&user); err != nil {
 		log.Println(err)
@@ -178,14 +178,14 @@ func HandlerUpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Create the bson document for the database update request.
-	document, err := mongo.Document(&user)
+	document, err := mg.Document(&user)
 	if err != nil {
 		http.Error(w, "Can't create DB request", http.StatusInternalServerError)
 		return
 	}
 	fmt.Println(*document)
 	// Updates the user into the mongo database.
-	response, err := mongo.Update(Database, Collection,
+	response, err := mg.Update(Database, Collection,
 		bson.M{"_id": uId}, bson.D{primitive.E{Key: "$set", Value: *document}})
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -207,7 +207,7 @@ func HandlerAuthorize(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Finds the user with the username and the encrypted password.
-	response := mongo.FindOne(Database, Collection,
+	response := mg.FindOne(Database, Collection,
 		bson.M{"username": ob.Username, "password": Hash(ob.Password)})
 	err = response.Err()
 	if err != nil {
@@ -283,7 +283,7 @@ func HandlerRefreshToken(w http.ResponseWriter, r *http.Request) {
 	userId := claims["userId"]
 	uId, _ := primitive.ObjectIDFromHex(fmt.Sprintf("%v", userId))
 	// Find the user from the database.
-	response := mongo.FindOne(Database, Collection, bson.M{"_id": uId})
+	response := mg.FindOne(Database, Collection, bson.M{"_id": uId})
 	err = response.Err()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
