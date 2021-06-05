@@ -2,6 +2,12 @@
 
 The famous game since the early days of Microsoft where you have to flag the cells with mine while opening the cells with value and get the highest score possible.
 
+### Learning outcomes
+- Store encrypted password and use the same encryption in authenticating user credentials.
+- Generation of access token and refresh token for extending user session.
+- Configure specific information to be added in the jwt tokens.
+- Implement middleware interceptor chains based on the endpoint.
+
 ### Microservices Ecosystem
 This repository is part of a larger ecosystem of microservices each serving it's purpose in bring Minesweeper to life.
 
