@@ -76,7 +76,7 @@ func HandlerNewUser(w http.ResponseWriter, r *http.Request) {
 	// Decode the user information to create a new user.
 	err := decoder.Decode(&userRequest)
 	if err != nil {
-		http.Error(w, "Can't decode the request", http.StatusBadRequest)
+		http.Error(w, Err_Decode_Request, http.StatusBadRequest)
 		return
 	}
 	// Add the encrypted password to be used for verifying credentials.
@@ -84,13 +84,13 @@ func HandlerNewUser(w http.ResponseWriter, r *http.Request) {
 	// Create the bson document for the mongo write request.
 	document, err := mg.Document(&userRequest)
 	if err != nil {
-		http.Error(w, "Can't create DB request", http.StatusInternalServerError)
+		http.Error(w, Err_Create_Document_Failed, http.StatusInternalServerError)
 		return
 	}
 	// Write the new user to the mongo database.
 	response, err := mg.Write(Database, Collection, *document)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, Err_Create_Failed, http.StatusInternalServerError)
 		return
 	}
 	// Return the generated id as the json response.
@@ -104,18 +104,18 @@ func HandlerGetUsers(w http.ResponseWriter, r *http.Request) {
 	// Decode the usernames from the request body.
 	err := decoder.Decode(&usernames)
 	if err != nil {
-		http.Error(w, "Can't decode the request", http.StatusInternalServerError)
+		http.Error(w, Err_Decode_Request, http.StatusBadRequest)
 		return
 	}
 	var response []objects.User
 	// Create the sorting options for the db response.
 	opts := options.Find()
-	opts.SetSort(bson.D{primitive.E{Key: "rating", Value: -1}})
+	// opts.SetSort(bson.D{primitive.E{Key: "rating", Value: -1}})
 	// Find the users matching the given criteria.
 	cursor, err := mg.Find(Database, Collection,
 		bson.M{"username": bson.M{"$in": usernames}}, opts)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, Err_Read_Failed, http.StatusNotFound)
 		return
 	}
 	// Decode the cursor into an array of users.
@@ -123,7 +123,7 @@ func HandlerGetUsers(w http.ResponseWriter, r *http.Request) {
 		var user objects.User
 		err := cursor.Decode(&user)
 		if err != nil {
-			http.Error(w, "Can't decode the response", http.StatusInternalServerError)
+			http.Error(w, Err_Decode_Response, http.StatusInternalServerError)
 		}
 		response = append(response, user)
 	}
@@ -139,13 +139,13 @@ func HandlerGetUserByUsername(w http.ResponseWriter, r *http.Request) {
 	response := mg.FindOne(Database, Collection, bson.M{"username": username})
 	err := response.Err()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, Err_Read_Failed, http.StatusNotFound)
 		return
 	}
 	// Decode user information received from the mongo response.
 	user, err := DecodeUser(response)
 	if err != nil {
-		http.Error(w, "Can't decode the response", http.StatusInternalServerError)
+		http.Error(w, Err_Decode_Response, http.StatusInternalServerError)
 		return
 	}
 	// Returns the user object as a json encoded response.
@@ -174,13 +174,13 @@ func HandlerUpdateUser(w http.ResponseWriter, r *http.Request) {
 	// Decode the update user request from the request body.
 	err := decoder.Decode(&user)
 	if err != nil {
-		http.Error(w, "Can't decode the request", http.StatusBadRequest)
+		http.Error(w, Err_Decode_Request, http.StatusBadRequest)
 		return
 	}
 	// Create the bson document for the database update request.
 	document, err := mg.Document(&user)
 	if err != nil {
-		http.Error(w, "Can't create DB request", http.StatusInternalServerError)
+		http.Error(w, Err_Create_Document_Failed, http.StatusInternalServerError)
 		return
 	}
 	fmt.Println(*document)
@@ -188,7 +188,7 @@ func HandlerUpdateUser(w http.ResponseWriter, r *http.Request) {
 	response, err := mg.Update(Database, Collection,
 		bson.M{"_id": uId}, bson.D{primitive.E{Key: "$set", Value: *document}})
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, Err_Update_Failed, http.StatusInternalServerError)
 		return
 	}
 	fmt.Println(response)
@@ -203,7 +203,7 @@ func HandlerAuthorize(w http.ResponseWriter, r *http.Request) {
 	// Decode the AuthorizeRequest from the request body.
 	err := decoder.Decode(&ob)
 	if err != nil {
-		http.Error(w, "Can't decode the request", http.StatusInternalServerError)
+		http.Error(w, Err_Decode_Request, http.StatusBadRequest)
 		return
 	}
 	// Finds the user with the username and the encrypted password.
@@ -211,19 +211,19 @@ func HandlerAuthorize(w http.ResponseWriter, r *http.Request) {
 		bson.M{"username": ob.Username, "password": Hash(ob.Password)})
 	err = response.Err()
 	if err != nil {
-		http.Error(w, "Invalid login", http.StatusInternalServerError)
+		http.Error(w, Err_Invalid_Login, http.StatusNotFound)
 		return
 	}
 	// Decode user information received from the mongo response.
 	user, err := DecodeUser(response)
 	if err != nil {
-		http.Error(w, "Can't decode the response", http.StatusInternalServerError)
+		http.Error(w, Err_Decode_Response, http.StatusInternalServerError)
 		return
 	}
 	// Generate new tokens for further authentications.
 	token, err := GenerateTokens(user)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, Err_Token_Generation_Failed, http.StatusInternalServerError)
 		return
 	}
 	// Returns the tokens as a json encoded response.
@@ -277,7 +277,7 @@ func Hash(s string) [32]byte {
 func HandlerRefreshToken(w http.ResponseWriter, r *http.Request) {
 	claims, err := net.Authenticate(r, os.Getenv(net.RefreshClientSecret))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusForbidden)
+		http.Error(w, Err_Unauthorized, http.StatusForbidden)
 		return
 	}
 	userId := claims["userId"]
@@ -286,19 +286,19 @@ func HandlerRefreshToken(w http.ResponseWriter, r *http.Request) {
 	response := mg.FindOne(Database, Collection, bson.M{"_id": uId})
 	err = response.Err()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, Err_Read_Failed, http.StatusNotFound)
 		return
 	}
 	// Decode user information received from the mongo response.
 	user, err := DecodeUser(response)
 	if err != nil {
-		http.Error(w, "Can't decode the response", http.StatusInternalServerError)
+		http.Error(w, Err_Decode_Response, http.StatusInternalServerError)
 		return
 	}
 	// Generate new tokens for further authentications.
 	token, err := GenerateTokens(user)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, Err_Token_Generation_Failed, http.StatusInternalServerError)
 		return
 	}
 	// Returns the tokens as a json encoded response.
